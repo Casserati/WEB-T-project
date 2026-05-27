@@ -1,6 +1,8 @@
 import express from 'express';
-import { ingredients, pizzaTemplates, doughTypes } from './db.js';
+import { ingredients, pizzaTemplates, doughTypes } from './database.js';
 import { ObjectId } from 'mongodb';
+
+const router = express.Router();
 
 router.get('/', async function (req, res) {
   res.type('application/json');
