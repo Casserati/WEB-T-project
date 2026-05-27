@@ -1,0 +1,22 @@
+# MongoDB data files
+data/
+*.lock
+WiredTiger
+WiredTiger.*
+*.wt
+data/*
+/data/*
+.vscode/
+
+# Logs
+*.log
+
+# Node (if applicable)
+node_modules/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
