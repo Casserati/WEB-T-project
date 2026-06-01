@@ -33,13 +33,14 @@ const app = createApp({
     const isWishBurger = computed(() => selectedBurger.value === wishBurgerId.value);
     const availableToppings = computed(() => toppings.value.filter((t) => t.available));
     const isValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value));
+    const isValidPhone = computed(() => /^(\+41\s?\d{2}|0\d{2})\s?\d{3}\s?\d{2}\s?\d{2}$/.test(phone.value.trim()));
 
     const isFormValid = computed(() => {
       if (!selectedBurger.value) return false;
       if (isWishBurger.value && (!selectedPatty.value || !selectedBun.value)) return false;
       if (customerName.value.trim().length < 2) return false;
       if (!isValidEmail.value) return false;
-      if (phone.value.trim().length < 5) return false;
+      if (!isValidPhone.value) return false;
       if (quantity.value < 1 || quantity.value > 20) return false;
       if (!geoAddress.value) return false;
       return true;
@@ -155,7 +156,7 @@ const app = createApp({
       selectedBurger, selectedPatty, selectedBun, selectedToppings,
       customerName, email, phone, quantity,
       geoAddress, geoLat, geoLng, geoAccuracy, geoLoading, geoError,
-      touched, isWishBurger, availableToppings, isValidEmail, isFormValid,
+      touched, isWishBurger, availableToppings, isValidEmail, isValidPhone, isFormValid,
       getLocation, submitOrder,
     };
   },

@@ -11,9 +11,9 @@
     <div id="app">
       <header>
         <nav>
+          <a href="#information">Information</a>
           <a href="#order">Order</a>
           <a href="#output">Summary</a>
-          <a href="#socials">Socials</a>
         </nav>
       </header>
       <main>
@@ -93,7 +93,7 @@
               <div class="form-field">
                 <label for="phone">Phone Number</label>
                 <input id="phone" type="tel" v-model="phone" @input="touched.phone = true" placeholder="+41 79 123 45 67" />
-                <p v-if="touched.phone && phone.trim().length < 5" class="field-error">Please enter a valid phone number.</p>
+                <p v-if="touched.phone && !isValidPhone" class="field-error">Format: +41 79 123 45 67 or 079 123 45 67</p>
               </div>
               <div class="form-field">
                 <label for="quantity">Quantity</label>
@@ -134,7 +134,7 @@
           <p v-else class="loading-msg">No order placed yet.</p>
         </section>
       </main>
-      <footer id="socials" class="w3-container w3-padding-32 w3-light-grey">
+      <footer class="w3-container w3-padding-32 w3-light-grey">
         <div class="w3-row-padding">
           <div class="w3-col s12 m12 l4 col-pad">
             <h4>Order Policy</h4>

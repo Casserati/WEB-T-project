@@ -49,28 +49,15 @@ router.post('/', async function (req, res) {
         return;
       }
     }
-    if (!data.burgerId || typeof data.burgerId !== 'string') {
-      res.status(400).send(JSON.stringify({ success: false, error: 'Please select a burger.' }));
-      return;
-    }
-    if (!data.customerName || typeof data.customerName !== 'string' || data.customerName.trim().length < 2) {
-      res.status(400).send(JSON.stringify({ success: false, error: 'Customer name is required (min 2 characters).' }));
-      return;
-    }
-    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      res.status(400).send(JSON.stringify({ success: false, error: 'Please enter a valid email address.' }));
-      return;
-    }
-    if (!data.phone || typeof data.phone !== 'string' || data.phone.trim().length < 5) {
-      res.status(400).send(JSON.stringify({ success: false, error: 'Please enter a valid phone number.' }));
-      return;
-    }
-    if (!data.address || typeof data.address !== 'string' || data.address.trim().length < 3) {
-      res.status(400).send(JSON.stringify({ success: false, error: 'Delivery address is required. Please use the location button.' }));
-      return;
-    }
-    if (typeof data.quantity !== 'number' || data.quantity < 1 || data.quantity > 20) {
-      res.status(400).send(JSON.stringify({ success: false, error: 'Quantity must be between 1 and 20.' }));
+    const errors = [];
+    if (!data.burgerId || typeof data.burgerId !== 'string') errors.push('Please select a burger.');
+    if (!data.customerName || typeof data.customerName !== 'string' || data.customerName.trim().length < 2) errors.push('Name is required (min 2 characters).');
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.push('Please enter a valid email.');
+    if (!data.phone || !/^(\+41\s?\d{2}|0\d{2})\s?\d{3}\s?\d{2}\s?\d{2}$/.test(data.phone.trim())) errors.push('Phone format: +41 79 123 45 67 or 079 123 45 67.');
+    if (!data.address || typeof data.address !== 'string' || data.address.trim().length < 3) errors.push('Delivery address is required.');
+    if (typeof data.quantity !== 'number' || data.quantity < 1 || data.quantity > 20) errors.push('Quantity must be between 1 and 20.');
+    if (errors.length > 0) {
+      res.status(400).send(JSON.stringify({ success: false, error: errors.join(' | ') }));
       return;
     }
     const burger = await burgers.findOne({ _id: new ObjectId(data.burgerId) });
@@ -85,22 +72,18 @@ router.post('/', async function (req, res) {
     let bunUpcharge = 0;
     let toppingDocs = [];
     if (isWish) {
-      if (!data.pattyId) {
-        res.status(400).send(JSON.stringify({ success: false, error: 'Please select a patty.' }));
-        return;
-      }
-      if (!data.bunTypeId) {
-        res.status(400).send(JSON.stringify({ success: false, error: 'Please select a bun type.' }));
+      if (!data.pattyId) errors.push('Please select a patty.');
+      if (!data.bunTypeId) errors.push('Please select a bun type.');
+      if (errors.length > 0) {
+        res.status(400).send(JSON.stringify({ success: false, error: errors.join(' | ') }));
         return;
       }
       const patty = await patties.findOne({ _id: new ObjectId(data.pattyId) });
-      if (!patty) {
-        res.status(404).send(JSON.stringify({ success: false, error: 'Patty not found.' }));
-        return;
-      }
+      if (!patty) errors.push('Patty not found.');
       const bunType = await bunTypes.findOne({ _id: new ObjectId(data.bunTypeId) });
-      if (!bunType) {
-        res.status(404).send(JSON.stringify({ success: false, error: 'Bun type not found.' }));
+      if (!bunType) errors.push('Bun type not found.');
+      if (errors.length > 0) {
+        res.status(404).send(JSON.stringify({ success: false, error: errors.join(' | ') }));
         return;
       }
       pattyName = patty.name;
