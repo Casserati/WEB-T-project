@@ -90,6 +90,10 @@
   flex: 1;
 }
 
+.form-field-full {
+  flex-basis: 100%;
+}
+
 .form-field label {
   display: block;
   font-weight: 600;
@@ -111,7 +115,40 @@
   border-color: #e67e22;
 }
 
-/* ── Validation errors ── */
+/* ── Geolocation ── */
+.geo-btn {
+  background: #3498db;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.geo-btn:hover {
+  background: #2980b9;
+}
+
+.geo-btn:disabled {
+  background: #95a5a6;
+  cursor: wait;
+}
+
+.geo-address {
+  margin: 8px 0 2px;
+  font-weight: 600;
+  color: #222;
+}
+
+.geo-detail {
+  font-size: 0.8rem;
+  color: #777;
+  margin: 0;
+}
+
+/* ── Validation ── */
 .field-error {
   color: #c0392b;
   font-size: 0.8rem;
@@ -140,7 +177,7 @@
   cursor: not-allowed;
 }
 
-/* ── Output section ── */
+/* ── Output ── */
 .order-summary {
   background: #fff;
   border: 2px solid #27ae60;
@@ -178,7 +215,7 @@
   margin-top: 12px;
 }
 
-/* ── Footer icons ── */
+/* ── Footer ── */
 .copyright-icon {
   width: 15px;
   vertical-align: middle;

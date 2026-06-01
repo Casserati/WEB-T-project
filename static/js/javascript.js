@@ -15,42 +15,86 @@ const app = createApp({
     const selectedBun = ref(null);
     const selectedToppings = ref([]);
     const customerName = ref('');
-    const address = ref('');
+    const email = ref('');
+    const phone = ref('');
     const quantity = ref(1);
-    const deliveryDate = ref('');
-    const deliveryTime = ref('');
+    const geoAddress = ref('');
+    const geoLat = ref(null);
+    const geoLng = ref(null);
+    const geoAccuracy = ref(null);
+    const geoLoading = ref(false);
+    const geoError = ref(null);
     const touched = ref({});
 
     const wishBurgerId = computed(() => {
       const wb = burgers.value.find((b) => b.name === 'Wish Burger');
       return wb ? wb._id : null;
     });
-
     const isWishBurger = computed(() => selectedBurger.value === wishBurgerId.value);
-
     const availableToppings = computed(() => toppings.value.filter((t) => t.available));
+    const isValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value));
 
     const isFormValid = computed(() => {
       if (!selectedBurger.value) return false;
       if (isWishBurger.value && (!selectedPatty.value || !selectedBun.value)) return false;
       if (customerName.value.trim().length < 2) return false;
-      if (address.value.trim().length < 5) return false;
+      if (!isValidEmail.value) return false;
+      if (phone.value.trim().length < 5) return false;
       if (quantity.value < 1 || quantity.value > 20) return false;
-      if (!deliveryDate.value || !deliveryTime.value) return false;
+      if (!geoAddress.value) return false;
       return true;
     });
 
+    // ── Geolocation API (5+ distinct calls) ──
+    function getLocation() {
+      geoError.value = null;
+      geoAddress.value = '';
+      // API call 1: property check
+      if (!navigator.geolocation) {
+        geoError.value = 'Geolocation is not supported by your browser.';
+        return;
+      }
+      geoLoading.value = true;
+      // API call 2: getCurrentPosition()
+      navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+    }
+
+    async function onGeoSuccess(position) {
+      // API call 3: coords.latitude
+      geoLat.value = position.coords.latitude.toFixed(5);
+      // API call 4: coords.longitude
+      geoLng.value = position.coords.longitude.toFixed(5);
+      // API call 5: coords.accuracy
+      geoAccuracy.value = Math.round(position.coords.accuracy);
+      try {
+        const url = 'https://nominatim.openstreetmap.org/reverse?lat=' + geoLat.value + '&lon=' + geoLng.value + '&format=json';
+        const res = await fetch(url);
+        const data = await res.json();
+        geoAddress.value = data.display_name || (geoLat.value + ', ' + geoLng.value);
+      } catch (err) {
+        geoAddress.value = geoLat.value + ', ' + geoLng.value;
+      } finally {
+        geoLoading.value = false;
+      }
+    }
+
+    function onGeoError(err) {
+      geoLoading.value = false;
+      if (err.code === 1) geoError.value = 'Location access was denied. Please allow location access.';
+      else if (err.code === 2) geoError.value = 'Position unavailable. Please try again.';
+      else geoError.value = 'Location request timed out. Please try again.';
+    }
+
     async function fetchData() {
       try {
-        const response = await fetch('/backend', {
-          method: 'GET',
-          signal: AbortSignal.timeout(5000),
-        });
+        const response = await fetch('/backend', { method: 'GET', signal: AbortSignal.timeout(5000) });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const result = await response.json();
         toppings.value = result.toppings.map((i) => ({
-          ...i,
-          upcharge: Number(i.upcharge) || 0,
+          ...i, upcharge: Number(i.upcharge) || 0,
           vegan: i.vegan === true || i.vegan === 'true',
           available: i.available === true || i.available === 'true',
         }));
@@ -66,16 +110,18 @@ const app = createApp({
     }
 
     async function submitOrder() {
-      touched.value = { burger: true, patty: true, bun: true, name: true, address: true, quantity: true, date: true, time: true };
+      touched.value = { burger: true, patty: true, bun: true, name: true, email: true, phone: true, quantity: true, geo: true };
       if (!isFormValid.value) return;
       submitError.value = null;
       const body = {
         burgerId: selectedBurger.value,
         customerName: customerName.value.trim(),
-        address: address.value.trim(),
+        email: email.value.trim(),
+        phone: phone.value.trim(),
         quantity: quantity.value,
-        deliveryDate: deliveryDate.value,
-        deliveryTime: deliveryTime.value,
+        address: geoAddress.value,
+        lat: geoLat.value,
+        lng: geoLng.value,
       };
       if (isWishBurger.value) {
         body.pattyId = selectedPatty.value;
@@ -91,7 +137,7 @@ const app = createApp({
         });
         const result = await response.json();
         if (!response.ok) {
-          submitError.value = result.errors ? result.errors.join(' ') : 'Order failed.';
+          submitError.value = result.error || 'Order failed.';
           return;
         }
         orderResult.value = result;
@@ -107,8 +153,10 @@ const app = createApp({
       toppings, burgers, bunTypes, patties,
       loading, fetchError, submitError, orderResult,
       selectedBurger, selectedPatty, selectedBun, selectedToppings,
-      customerName, address, quantity, deliveryDate, deliveryTime,
-      touched, isWishBurger, availableToppings, isFormValid, submitOrder,
+      customerName, email, phone, quantity,
+      geoAddress, geoLat, geoLng, geoAccuracy, geoLoading, geoError,
+      touched, isWishBurger, availableToppings, isValidEmail, isFormValid,
+      getLocation, submitOrder,
     };
   },
 });
