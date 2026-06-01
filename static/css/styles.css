@@ -1,60 +1,59 @@
-/* ── Ingredient categories ── */
-.category-group {
-  margin-bottom: 24px;
-}
-
-.category-title {
-  text-transform: capitalize;
-  border-bottom: 2px solid #c0392b;
-  display: inline-block;
-  padding-bottom: 4px;
-  margin-bottom: 12px;
-}
-
-.ingredients-grid {
+/* ── Selectable card grid ── */
+.card-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+  margin-bottom: 12px;
 }
 
-.ingredient-card {
+.card {
   background: #fff;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
   border-radius: 8px;
   padding: 14px 18px;
-  min-width: 180px;
+  min-width: 170px;
   max-width: 240px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
   position: relative;
 }
 
-.ingredient-card:hover {
+.card:hover {
   transform: translateY(-2px);
 }
 
-.ingredient-card.unavailable {
-  opacity: 0.5;
+.card.selected {
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.25);
 }
 
-.ingredient-card h4 {
+.card input[type="radio"],
+.card input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card h4 {
   margin: 0 0 4px;
 }
 
-.ingredient-card .description {
+.description {
   margin: 0 0 8px;
   color: #555;
   font-size: 0.85rem;
 }
 
-.ingredient-card .meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
+/* ── Prices ── */
+.base-price {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #222;
+  margin: 4px 0;
 }
 
-.ingredient-card .upcharge {
+.upcharge {
   font-weight: bold;
   color: #c0392b;
 }
@@ -73,9 +72,91 @@
   color: #fff;
 }
 
-.badge-unavailable {
-  background: #bbb;
+.badge-popular {
+  background: #e67e22;
   color: #fff;
+}
+
+/* ── Form fields ── */
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-field {
+  min-width: 200px;
+  flex: 1;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.form-field input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: #e67e22;
+}
+
+/* ── Validation errors ── */
+.field-error {
+  color: #c0392b;
+  font-size: 0.8rem;
+  margin: 4px 0 0;
+}
+
+/* ── Order button ── */
+.order-btn {
+  background: #e67e22;
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.order-btn:hover {
+  background: #cf6d17;
+}
+
+.order-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ── Output section ── */
+.order-summary {
+  background: #fff;
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  padding: 16px 20px;
+  max-width: 500px;
+}
+
+.order-summary p {
+  margin: 4px 0;
+}
+
+.total-price {
+  font-size: 1.2rem;
+  color: #27ae60;
+  margin-top: 8px;
 }
 
 /* ── Status messages ── */
@@ -90,7 +171,14 @@
   color: #c0392b;
 }
 
-/* ── Footer icons (previously inline styles) ── */
+/* ── Hero image ── */
+.hero-img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+/* ── Footer icons ── */
 .copyright-icon {
   width: 15px;
   vertical-align: middle;
