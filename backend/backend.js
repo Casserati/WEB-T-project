@@ -1,139 +1,134 @@
-import express from 'express';
-import { ObjectId } from 'mongodb';
-import { toppings, burgers, bunTypes, patties, orders } from './database.js';
+import express from "express";
+import { ObjectId } from "mongodb";
+import { burgers, orders } from "./database.js";
 
 const router = express.Router();
-router.use(express.json());
 
-router.get('/', async function (req, res) {
-  res.type('application/json');
+router.get("/", async function (req, res) {
+  res.type("application/json");
   try {
-    const allToppings = await toppings.find({}).toArray();
-    const toppingList = allToppings.map((t) => ({
-      id: t._id,
-      name: t.name,
-      description: t.description,
-      upcharge: t.upcharge,
-      vegan: t.vegan,
-      available: t.available,
-    }));
     const allBurgers = await burgers.find({}).toArray();
-    const allBunTypes = await bunTypes.find({}).toArray();
-    const allPatties = await patties.find({}).toArray();
-    res.send(JSON.stringify({
-      toppings: toppingList,
-      burgers: allBurgers,
-      bunTypes: allBunTypes,
-      patties: allPatties,
-    }));
+    res.send(JSON.stringify({ burgers: allBurgers }));
   } catch (error) {
     console.error(error);
-    res.status(500).send(JSON.stringify({ error: 'Internal server error' }));
+    res.status(500).send(JSON.stringify({ error: "Internal server error" }));
   }
 });
 
-router.post('/', async function (req, res) {
-  res.type('application/json');
+router.post("/", async function (req, res) {
+  res.type("application/json");
   try {
-    let data = req.body;
-    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
-      const raw = await new Promise((resolve) => {
-        let body = '';
-        req.on('data', (chunk) => { body += chunk; });
-        req.on('end', () => { resolve(body); });
-      });
-      try {
-        data = JSON.parse(raw);
-      } catch (e) {
-        res.status(400).send(JSON.stringify({ success: false, error: 'Request body is empty or not valid JSON.' }));
-        return;
-      }
+    let data;
+    try {
+      data = JSON.parse(req.body.toString("utf-8"));
+    } catch (e) {
+      return res
+        .status(400)
+        .send(JSON.stringify({ success: false, error: "Invalid JSON." }));
     }
     const errors = [];
-    if (!data.burgerId || typeof data.burgerId !== 'string') errors.push('Please select a burger.');
-    if (!data.customerName || typeof data.customerName !== 'string' || data.customerName.trim().length < 2) errors.push('Name is required (min 2 characters).');
-    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.push('Please enter a valid email.');
-    if (!data.phone || !/^(\+41\s?\d{2}|0\d{2})\s?\d{3}\s?\d{2}\s?\d{2}$/.test(data.phone.trim())) errors.push('Phone format: +41 79 123 45 67 or 079 123 45 67.');
-    if (!data.address || typeof data.address !== 'string' || data.address.trim().length < 3) errors.push('Delivery address is required.');
-    if (typeof data.quantity !== 'number' || data.quantity < 1 || data.quantity > 20) errors.push('Quantity must be between 1 and 20.');
-    if (errors.length > 0) {
-      res.status(400).send(JSON.stringify({ success: false, error: errors.join(' | ') }));
-      return;
+    if (!data.cart || !Array.isArray(data.cart) || data.cart.length === 0)
+      errors.push("Cart is empty.");
+    if (
+      !data.customerName ||
+      typeof data.customerName !== "string" ||
+      data.customerName.trim().length < 2
+    )
+      errors.push("Name required (min 2 chars).");
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+      errors.push("Invalid email.");
+    if (
+      !data.phone ||
+      !/^(\+41\s?\d{2}|0\d{2})\s?\d{3}\s?\d{2}\s?\d{2}$/.test(data.phone.trim())
+    )
+      errors.push("Phone: +41 79 123 45 67 or 079 123 45 67.");
+    if (
+      !data.address ||
+      typeof data.address !== "string" ||
+      data.address.trim().length < 3
+    )
+      errors.push("Address required.");
+    if (errors.length > 0)
+      return res
+        .status(400)
+        .send(JSON.stringify({ success: false, error: errors.join(" | ") }));
+    let totalPrice = 0;
+    const orderItems = [];
+    for (const ci of data.cart) {
+      const burger = await burgers.findOne({ _id: new ObjectId(ci.burgerId) });
+      if (!burger)
+        return res
+          .status(404)
+          .send(
+            JSON.stringify({
+              success: false,
+              error: "Burger not found: " + ci.burgerId,
+            }),
+          );
+      const qty = Number(ci.quantity) || 1;
+      if (qty < 1 || qty > 20)
+        return res
+          .status(400)
+          .send(
+            JSON.stringify({ success: false, error: "Quantity must be 1-20." }),
+          );
+      const itemTotal = Math.round(Number(burger.basePrice) * qty * 100) / 100;
+      totalPrice += itemTotal;
+      orderItems.push({
+        burgerName: burger.name,
+        quantity: qty,
+        itemTotal: itemTotal,
+      });
     }
-    const burger = await burgers.findOne({ _id: new ObjectId(data.burgerId) });
-    if (!burger) {
-      res.status(404).send(JSON.stringify({ success: false, error: 'Burger not found.' }));
-      return;
-    }
-    const isWish = burger.name === 'Wish Burger';
-    let pattyName = null;
-    let bunName = null;
-    let pattyUpcharge = 0;
-    let bunUpcharge = 0;
-    let toppingDocs = [];
-    if (isWish) {
-      if (!data.pattyId) errors.push('Please select a patty.');
-      if (!data.bunTypeId) errors.push('Please select a bun type.');
-      if (errors.length > 0) {
-        res.status(400).send(JSON.stringify({ success: false, error: errors.join(' | ') }));
-        return;
-      }
-      const patty = await patties.findOne({ _id: new ObjectId(data.pattyId) });
-      if (!patty) errors.push('Patty not found.');
-      const bunType = await bunTypes.findOne({ _id: new ObjectId(data.bunTypeId) });
-      if (!bunType) errors.push('Bun type not found.');
-      if (errors.length > 0) {
-        res.status(404).send(JSON.stringify({ success: false, error: errors.join(' | ') }));
-        return;
-      }
-      pattyName = patty.name;
-      pattyUpcharge = patty.upcharge || 0;
-      bunName = bunType.name;
-      bunUpcharge = bunType.upcharge || 0;
-      if (data.toppingIds && data.toppingIds.length > 0) {
-        const toppingOids = data.toppingIds.map((id) => new ObjectId(id));
-        toppingDocs = await toppings.find({ _id: { $in: toppingOids }, available: true }).toArray();
-        if (toppingDocs.length !== data.toppingIds.length) {
-          res.status(400).send(JSON.stringify({ success: false, error: 'One or more toppings are unavailable.' }));
-          return;
-        }
-      }
-    } else {
-      if (burger.defaultPatty) {
-        const dp = await patties.findOne({ _id: burger.defaultPatty });
-        if (dp) pattyName = dp.name;
-      }
-      if (burger.defaultBunType) {
-        const db2 = await bunTypes.findOne({ _id: burger.defaultBunType });
-        if (db2) bunName = db2.name;
-      }
-    }
-    const toppingsTotal = toppingDocs.reduce((sum, t) => sum + (t.upcharge || 0), 0);
-    const totalPrice = (Number(burger.basePrice) + pattyUpcharge + bunUpcharge + toppingsTotal) * data.quantity;
     const order = {
       customerName: data.customerName.trim(),
       email: data.email.trim(),
       phone: data.phone.trim(),
-      burgerName: burger.name,
-      pattyName: pattyName,
-      bunTypeName: bunName,
-      toppings: toppingDocs.map((t) => t.name),
-      quantity: data.quantity,
       address: data.address.trim(),
       lat: data.lat || null,
       lng: data.lng || null,
+      items: orderItems,
       totalPrice: Math.round(totalPrice * 100) / 100,
       createdAt: new Date(),
     };
     const result = await orders.insertOne(order);
-    res.status(201).send(JSON.stringify({
-      success: true,
-      orderId: result.insertedId.toString(),
-      order: order,
-    }));
+    res
+      .status(201)
+      .send(
+        JSON.stringify({
+          success: true,
+          orderId: result.insertedId.toString(),
+          order: order,
+        }),
+      );
   } catch (error) {
     console.error(error);
-    res.status(500).send(JSON.stringify({ error: 'Internal server error' }));
+    res.status(500).send(JSON.stringify({ error: "Internal server error" }));
+  }
+});
+
+router.get("/last-order", async function (req, res) {
+  res.type("application/json");
+  try {
+    const email = req.query.email;
+    if (!email || typeof email !== "string")
+      return res
+        .status(400)
+        .send(JSON.stringify({ error: "Email parameter required." }));
+    const lastOrder = await orders.findOne(
+      { email: email.trim() },
+      { sort: { createdAt: -1 } },
+    );
+    if (!lastOrder)
+      return res
+        .status(404)
+        .send(JSON.stringify({ error: "No previous orders found." }));
+    res.send(
+      JSON.stringify({ orderId: lastOrder._id.toString(), order: lastOrder }),
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(JSON.stringify({ error: "Internal server error" }));
   }
 });
 

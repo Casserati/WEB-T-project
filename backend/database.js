@@ -1,12 +1,18 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient } from "mongodb";
 
-const client = new MongoClient('mongodb://localhost:27017');
+const client = new MongoClient("mongodb://localhost:27017");
+await client.connect();
 
-const db = client.db('burgerpalace');
-const toppings = db.collection('toppings');
-const burgers = db.collection('burgers');
-const bunTypes = db.collection('bunTypes');
-const patties = db.collection('patties');
-const orders = db.collection('orders');
+const db = client.db("burgerpalace");
 
-export { toppings, burgers, bunTypes, patties, orders };
+await db.createCollection("burgers").catch(() => {});
+await db.createCollection("orders").catch(() => {});
+
+await db.collection("burgers").createIndex({ name: 1 }, { unique: true }).catch(() => {});
+await db.collection("orders").createIndex({ createdAt: -1 }).catch(() => {});
+await db.collection("orders").createIndex({ email: 1 }).catch(() => {});
+
+const burgers = db.collection("burgers");
+const orders = db.collection("orders");
+
+export { burgers, orders };

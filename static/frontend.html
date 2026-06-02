@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <link rel="stylesheet" href="css/styles.css" />
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <title>CSF - Burger Palace</title>
@@ -10,158 +11,142 @@
   <body>
     <div id="app">
       <header>
-        <nav>
+        <nav :class="{ 'menu-open': menuOpen }">
+          <button class="hamburger" @click="menuOpen = !menuOpen" aria-label="Menu">☰</button>
           <a href="#information">Information</a>
           <a href="#order">Order</a>
+          <a href="#cart">Cart</a>
           <a href="#output">Summary</a>
         </nav>
       </header>
       <main>
-        <section id="information">
-          <h2>Welcome to the Burger Palace!</h2>
-          <p>Choose a signature burger or build your own masterpiece. Pick your patty, bun, and toppings, then fill in your delivery details and place your order!</p>
-          <img src="img/burger-hero.jpg" alt="Delicious burger on a wooden board" class="hero-img" />
+        <section id="information" class="w3-row-padding">
+          <div class="w3-col s12 l8">
+            <h2>Welcome to the Burger Palace!</h2>
+            <p>Pick from our signature burgers, add them to your cart, fill in your delivery details, and place your order!</p>
+          </div>
+          <div class="w3-col s12 l4">
+            <img src="img/burger-hero.png" alt="Delicious burger on a wooden board" class="hero-img" />
+          </div>
         </section>
         <section id="order">
-          <h2>Place your Order</h2>
+          <h2>Menu</h2>
           <p v-if="loading" class="loading-msg">Loading menu…</p>
           <p v-else-if="fetchError" class="error-msg">{{ fetchError }}</p>
           <div v-else>
-            <!-- BURGER SELECTION -->
-            <h3>1. Choose your Burger</h3>
+            <h3>Choose your Burger</h3>
             <div class="card-grid">
               <label v-for="b in burgers" :key="b._id" class="card" :class="{ selected: selectedBurger === b._id }">
                 <input type="radio" name="burger" :value="b._id" v-model="selectedBurger" />
                 <h4>{{ b.name }}</h4>
                 <p class="description">{{ b.description }}</p>
-                <p class="base-price">{{ b.basePrice.toFixed(2) }} €</p>
+                <p class="base-price">{{ b.basePrice.toFixed(2) }}</p>
                 <span v-if="b.popular" class="badge badge-popular">Popular</span>
               </label>
             </div>
-            <p v-if="touched.burger && !selectedBurger" class="field-error">Please select a burger.</p>
-            <!-- PATTY (Wish Burger only) -->
-            <div v-if="isWishBurger">
-              <h3>2. Choose your Patty</h3>
-              <div class="card-grid">
-                <label v-for="p in patties" :key="p._id" class="card" :class="{ selected: selectedPatty === p._id }">
-                  <input type="radio" name="patty" :value="p._id" v-model="selectedPatty" />
-                  <h4>{{ p.name }}</h4>
-                  <p class="description">{{ p.description }}</p>
-                  <p class="upcharge" v-if="p.upcharge > 0">+ {{ p.upcharge.toFixed(2) }} €</p>
-                  <p class="upcharge" v-else>Included</p>
-                  <span v-if="p.vegan" class="badge badge-vegan">Vegan</span>
-                </label>
-              </div>
-              <p v-if="touched.patty && !selectedPatty" class="field-error">Please select a patty.</p>
-              <!-- BUN -->
-              <h3>3. Choose your Bun</h3>
-              <div class="card-grid">
-                <label v-for="bn in bunTypes" :key="bn._id" class="card" :class="{ selected: selectedBun === bn._id }">
-                  <input type="radio" name="bun" :value="bn._id" v-model="selectedBun" />
-                  <h4>{{ bn.name }}</h4>
-                  <p class="description">{{ bn.description }}</p>
-                  <p class="upcharge" v-if="bn.upcharge > 0">+ {{ bn.upcharge.toFixed(2) }} €</p>
-                  <p class="upcharge" v-else>Included</p>
-                </label>
-              </div>
-              <p v-if="touched.bun && !selectedBun" class="field-error">Please select a bun.</p>
-              <!-- TOPPINGS -->
-              <h3>4. Add Toppings</h3>
-              <div class="card-grid">
-                <label v-for="t in availableToppings" :key="t.id" class="card" :class="{ selected: selectedToppings.includes(t.id) }">
-                  <input type="checkbox" :value="t.id" v-model="selectedToppings" />
-                  <h4>{{ t.name }}</h4>
-                  <p class="description">{{ t.description }}</p>
-                  <span class="upcharge">+ {{ t.upcharge.toFixed(2) }} €</span>
-                  <span v-if="t.vegan" class="badge badge-vegan">Vegan</span>
-                </label>
-              </div>
+            <div class="form-field form-field-small">
+              <label for="quantity">Quantity</label>
+              <input id="quantity" type="number" v-model.number="quantity" min="1" max="20" />
             </div>
-            <!-- DELIVERY DETAILS -->
-            <h3>{{ isWishBurger ? '5' : '2' }}. Delivery Details</h3>
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="name">Your Name</label>
-                <input id="name" type="text" v-model="customerName" @input="touched.name = true" placeholder="Min. 2 characters" />
-                <p v-if="touched.name && customerName.trim().length < 2" class="field-error">Name must be at least 2 characters.</p>
-              </div>
-              <div class="form-field">
-                <label for="email">Email</label>
-                <input id="email" type="email" v-model="email" @input="touched.email = true" placeholder="you@example.com" />
-                <p v-if="touched.email && !isValidEmail" class="field-error">Please enter a valid email address.</p>
-              </div>
-              <div class="form-field">
-                <label for="phone">Phone Number</label>
-                <input id="phone" type="tel" v-model="phone" @input="touched.phone = true" placeholder="+41 79 123 45 67" />
-                <p v-if="touched.phone && !isValidPhone" class="field-error">Format: +41 79 123 45 67 or 079 123 45 67</p>
-              </div>
-              <div class="form-field">
-                <label for="quantity">Quantity</label>
-                <input id="quantity" type="number" v-model.number="quantity" @input="touched.quantity = true" min="1" max="20" />
-                <p v-if="touched.quantity && (quantity < 1 || quantity > 20)" class="field-error">Quantity must be between 1 and 20.</p>
-              </div>
-              <div class="form-field form-field-full">
-                <label>Delivery Address</label>
-                <button type="button" class="geo-btn" @click="getLocation" :disabled="geoLoading">
-                  {{ geoLoading ? 'Locating…' : 'Use my Location' }}
-                </button>
-                <p v-if="geoAddress" class="geo-address">{{ geoAddress }}</p>
-                <p v-if="geoAccuracy" class="geo-detail">Accuracy: {{ geoAccuracy }} m | Lat: {{ geoLat }} | Lng: {{ geoLng }}</p>
-                <p v-if="geoError" class="field-error">{{ geoError }}</p>
-                <p v-if="touched.geo && !geoAddress" class="field-error">Please use the button to detect your delivery address.</p>
-              </div>
-            </div>
-            <button class="order-btn" @click="submitOrder" :disabled="!isFormValid">Place Order</button>
-            <p v-if="submitError" class="error-msg">{{ submitError }}</p>
+            <button class="order-btn" @click="addToCart" :disabled="!canAddToCart">Add to Cart</button>
           </div>
         </section>
-        <!-- OUTPUT -->
+        <section id="cart">
+          <h2>Your Cart <span v-if="cart.length">({{ cart.length }})</span></h2>
+          <p v-if="!cart.length" class="loading-msg">Your cart is empty.</p>
+          <div v-else>
+            <div v-for="item in cart" :key="item.id" class="cart-item">
+              <div class="cart-item-info">
+                <strong>{{ item.quantity }}x {{ item.burgerName }}</strong>
+              </div>
+              <div class="cart-item-actions">
+                <span class="cart-item-price">{{ item.itemTotal.toFixed(2) }}</span>
+                <button class="remove-btn" @click="removeFromCart(item.id)">✕</button>
+              </div>
+            </div>
+            <p class="cart-total">Total: {{ cartTotal.toFixed(2) }}</p>
+            <button class="clear-btn" @click="clearCart">Clear Cart</button>
+          </div>
+          <h3>Delivery Details</h3>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="name">Your Name</label>
+              <input id="name" type="text" v-model="customerName" @input="touched.name = true" placeholder="Min. 2 characters" />
+              <p v-if="touched.name && customerName.trim().length < 2" class="field-error">Name must be at least 2 characters.</p>
+            </div>
+            <div class="form-field">
+              <label for="email">Email</label>
+              <input id="email" type="email" v-model="email" @input="touched.email = true" placeholder="you@example.com" />
+              <p v-if="touched.email && !isValidEmail" class="field-error">Please enter a valid email.</p>
+            </div>
+            <div class="form-field">
+              <label for="phone">Phone Number</label>
+              <input id="phone" type="tel" v-model="phone" @input="touched.phone = true" placeholder="+41 79 123 45 67" />
+              <p v-if="touched.phone && !isValidPhone" class="field-error">Format: +41 79 123 45 67 or 079 123 45 67</p>
+            </div>
+            <div class="form-field form-field-full">
+              <label for="address">Delivery Address</label>
+              <div class="address-row">
+                <input id="address" type="text" v-model="address" @input="touched.address = true" placeholder="Click locate or type manually" />
+                <button type="button" class="geo-btn" @click="getLocation" :disabled="geoLoading">{{ geoLoading ? '…' : '📍' }}</button>
+              </div>
+              <p v-if="geoAccuracy" class="geo-detail">Accuracy: {{ geoAccuracy }}m | {{ geoLat }}, {{ geoLng }}</p>
+              <p v-if="geoError" class="field-error">{{ geoError }}</p>
+              <p v-if="touched.address && address.trim().length < 3" class="field-error">Please enter or locate your delivery address.</p>
+            </div>
+          </div>
+          <label class="save-details">
+            <input type="checkbox" v-model="saveDetails" />
+            Save my details for next time
+          </label>
+          <button class="order-btn" @click="submitOrder" :disabled="!canOrder">Place Order</button>
+          <p v-if="submitError" class="error-msg">{{ submitError }}</p>
+        </section>
         <section id="output">
           <h2>Order Summary</h2>
           <div v-if="orderResult" class="order-summary">
             <p><strong>Order ID:</strong> {{ orderResult.orderId }}</p>
-            <p><strong>Burger:</strong> {{ orderResult.order.burgerName }}</p>
-            <p v-if="orderResult.order.pattyName"><strong>Patty:</strong> {{ orderResult.order.pattyName }}</p>
-            <p v-if="orderResult.order.bunTypeName"><strong>Bun:</strong> {{ orderResult.order.bunTypeName }}</p>
-            <p v-if="orderResult.order.toppings && orderResult.order.toppings.length"><strong>Toppings:</strong> {{ orderResult.order.toppings.join(', ') }}</p>
-            <p><strong>Quantity:</strong> {{ orderResult.order.quantity }}</p>
-            <p><strong>Customer:</strong> {{ orderResult.order.customerName }}</p>
-            <p><strong>Email:</strong> {{ orderResult.order.email }}</p>
-            <p><strong>Phone:</strong> {{ orderResult.order.phone }}</p>
-            <p><strong>Delivery to:</strong> {{ orderResult.order.address }}</p>
-            <p class="total-price"><strong>Total: {{ orderResult.order.totalPrice.toFixed(2) }} €</strong></p>
+            <p><strong>Customer:</strong> {{ orderResult.order.customerName }} ({{ orderResult.order.email }}, {{ orderResult.order.phone }})</p>
+            <p><strong>Delivery:</strong><br />{{ orderResult.order.address }}</p>
+            <div v-for="(item, i) in orderResult.order.items" :key="i" class="summary-item">
+              <p>{{ item.quantity }}x {{ item.burgerName }}</p>
+            </div>
+            <p class="total-price">Total: {{ orderResult.order.totalPrice.toFixed(2) }}</p>
           </div>
-          <p v-else class="loading-msg">No order placed yet.</p>
+          <div v-else-if="lastOrder" class="order-summary last-order">
+            <h3>Your Last Order</h3>
+            <p><strong>Order ID:</strong> {{ lastOrder.orderId }}</p>
+            <p><strong>Delivery:</strong><br />{{ lastOrder.order.address }}</p>
+            <div v-if="lastOrder.order.items" v-for="(item, i) in lastOrder.order.items" :key="i" class="summary-item">
+              <p>{{ item.quantity }}x {{ item.burgerName }}</p>
+            </div>
+            <p class="total-price">Total: {{ lastOrder.order.totalPrice.toFixed(2) }}</p>
+          </div>
+          <p v-else class="loading-msg">No orders yet.</p>
         </section>
       </main>
-      <footer class="w3-container w3-padding-32 w3-light-grey">
+      <footer class="w3-container w3-padding-32">
         <div class="w3-row-padding">
           <div class="w3-col s12 m12 l4 col-pad">
             <h4>Order Policy</h4>
-            <p>All orders placed through Burger Palace are final. Once confirmed, orders cannot be modified, canceled, or refunded.</p>
+            <p>All orders are final. Once confirmed, orders cannot be modified, canceled, or refunded.</p>
           </div>
           <div class="w3-col s12 m12 l4 col-pad">
-            <h4>Copyright</h4>
-            <p><img src="img/copyright.svg" alt="Copyright Icon" class="copyright-icon" /> All content and branding on this website are protected by copyright law.</p>
+            <h4>Payment Policy</h4>
+            <p>Payment is due upon delivery. Our driver will collect the total amount in cash or by card at your door. Please have your payment ready when your order arrives to ensure a smooth and speedy handover.</p>
           </div>
           <div class="w3-col s12 m12 l4 col-pad">
             <h4>Follow Us</h4>
-            <p>Stay connected with us on social media:</p>
+            <p>Stay connected on social media:</p>
             <div class="social-icons">
               <a href="https://instagram.com" target="_blank"><img src="img/insta.svg" alt="Instagram" class="social-icon" /></a>
               <a href="https://facebook.com" target="_blank"><img src="img/facebook.svg" alt="Facebook" class="social-icon" /></a>
-              <a href="https://github.com" target="_blank"><img src="img/github.svg" alt="GitHub" class="social-icon" /></a>
-              <a href="https://www.linkedin.com" target="_blank"><img src="img/linkedin.svg" alt="LinkedIn" class="social-icon" /></a>
-              <a href="https://snapchat.com" target="_blank"><img src="img/snap.svg" alt="Snapchat" class="social-icon" /></a>
+              <a href="https://github.com/Casserati/WEB-T-project" target="_blank"><img src="img/github.svg" alt="GitHub" class="social-icon" /></a>
               <a href="https://tiktok.com" target="_blank"><img src="img/tiktok.svg" alt="TikTok" class="social-icon" /></a>
-              <a href="https://x.com" target="_blank"><img src="img/x.svg" alt="X (Twitter)" class="social-icon" /></a>
-              <a href="https://youtube.com" target="_blank"><img src="img/youtube.svg" alt="YouTube" class="social-icon" /></a>
             </div>
           </div>
         </div>
-        <div class="w3-center w3-padding-16">
-          <small>© 2026 Burger Palace. All rights reserved.</small>
-        </div>
+        <div class="w3-center w3-padding-16"><small>© 2026 Burger Palace. All rights reserved.</small></div>
       </footer>
     </div>
     <script src="js/javascript.js"></script>
