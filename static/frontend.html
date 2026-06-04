@@ -12,7 +12,7 @@
     <div id="app">
       <header>
         <nav class="w3-bar">
-          <button class="w3-bar-item w3-button w3-hide-large w3-hide-medium" @click="menuOpen = !menuOpen" aria-label="Menu">☰</button>
+          <button type="button" class="w3-bar-item w3-button w3-hide-large w3-hide-medium" @click="menuOpen = !menuOpen" aria-label="Menu">☰</button>
           <a href="#information" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Information</a>
           <a href="#order" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Order</a>
           <a href="#cart" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Cart</a>
@@ -29,87 +29,87 @@
             <img src="img/burger-hero.png" alt="Delicious burger on a wooden board" class="hero-img" />
           </div>
         </section>
-        <section id="order">
-          <h2>Menu</h2>
-          <p v-if="loading" class="loading-msg">Loading menu…</p>
-          <p v-else-if="fetchError" class="error-msg">{{ fetchError }}</p>
-          <div v-else>
-            <h3>Choose your Burger</h3>
-            <div class="card-grid w3-row-padding">
-              <div v-for="b in burgers" :key="b._id" class="w3-col s12 m6 l4">
-                <div class="card" :class="{ selected: selectedBurger === b._id }" @click="selectedBurger = b._id">
-                  <input type="radio" name="burger" :value="b._id" v-model="selectedBurger" :aria-label="b.name" />
-                  <h4>{{ b.name }}</h4>
-                  <p class="description">{{ b.description }}</p>
-                  <p class="base-price">{{ b.basePrice.toFixed(2) }}</p>
-                  <span v-if="b.popular" class="badge badge-popular">Popular</span>
+        <form @submit.prevent="submitOrder">
+          <section id="order">
+            <h2>Menu</h2>
+            <p v-if="loading" class="loading-msg">Loading menu…</p>
+            <p v-else-if="fetchError" class="error-msg">{{ fetchError }}</p>
+            <div v-else>
+              <h3>Choose your Burger</h3>
+              <div class="card-grid w3-row-padding">
+                <div v-for="b in burgers" :key="b._id" class="w3-col s12 m6 l4">
+                  <div class="card" :class="{ selected: selectedBurger === b._id }" @click="selectedBurger = b._id">
+                    <input type="radio" :id="'burger-' + b._id" name="burger" :value="b._id" v-model="selectedBurger" />
+                    <label :for="'burger-' + b._id" class="burger-name">{{ b.name }}</label>
+                    <p class="description">{{ b.description }}</p>
+                    <p class="base-price">{{ b.basePrice.toFixed(2) }}</p>
+                    <span v-if="b.popular" class="badge badge-popular">Popular</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="form-field form-field-small">
-              <label for="quantity">Quantity</label>
-              <input id="quantity" type="number" v-model.number="quantity" min="1" max="20" @input="touched.quantity = true" />
-              <p v-if="touched.quantity && (quantity < 1 || quantity > 20)" class="field-error">Quantity must be between 1 and 20.</p>
-            </div>
-            <button class="order-btn" @click="addToCart" :disabled="!canAddToCart">Add to Cart</button>
-          </div>
-        </section>
-        <section id="cart">
-          <h2>
-            Your Cart
-            <span v-if="cart.length">({{ cart.length }})</span>
-          </h2>
-          <p v-if="!cart.length" class="loading-msg">Your cart is empty.</p>
-          <div v-else>
-            <div v-for="item in cart" :key="item.id" class="cart-item">
-              <div class="cart-item-info">
-                <strong>{{ item.quantity }}x {{ item.burgerName }}</strong>
+              <div class="form-field form-field-small">
+                <label for="quantity">Quantity</label>
+                <input id="quantity" type="number" v-model.number="quantity" min="1" max="20" @input="touched.quantity = true" />
+                <p v-if="touched.quantity && (quantity < 1 || quantity > 20)" class="field-error">Quantity must be between 1 and 20.</p>
               </div>
-              <div class="cart-item-actions">
-                <span class="cart-item-price">{{ item.itemTotal.toFixed(2) }}</span>
-                <button class="remove-btn" @click="removeFromCart(item.id)" aria-label="Remove item">✕</button>
+              <button type="button" class="order-btn" @click="addToCart" :disabled="!canAddToCart">Add to Cart</button>
+            </div>
+          </section>
+          <section id="cart">
+            <h2>
+              Your Cart
+              <span v-if="cart.length">({{ cart.length }})</span>
+            </h2>
+            <p v-if="!cart.length" class="loading-msg">Your cart is empty.</p>
+            <div v-else>
+              <div v-for="item in cart" :key="item.id" class="cart-item">
+                <div class="cart-item-info">
+                  <strong>{{ item.quantity }}x {{ item.burgerName }}</strong>
+                </div>
+                <div class="cart-item-actions">
+                  <span class="cart-item-price">{{ item.itemTotal.toFixed(2) }}</span>
+                  <button type="button" class="remove-btn" @click="removeFromCart(item.id)" aria-label="Remove item">✕</button>
+                </div>
+              </div>
+              <p class="cart-total">Total: {{ cartTotal.toFixed(2) }}</p>
+              <button type="button" class="clear-btn" @click="clearCart">Clear Cart</button>
+            </div>
+            <h3>Delivery Details</h3>
+            <div class="form-grid w3-row-padding">
+              <div class="form-field w3-col s12 m6">
+                <label for="name">Your Name</label>
+                <input id="name" type="text" v-model="customerName" @input="touched.name = true" placeholder="Min. 2 characters" />
+                <p v-if="touched.name && customerName.trim().length < 2" class="field-error">Name must be at least 2 characters.</p>
+              </div>
+              <div class="form-field w3-col s12 m6">
+                <label for="email">Email</label>
+                <input id="email" type="email" v-model="email" @input="touched.email = true" placeholder="you@example.com" />
+                <p v-if="touched.email && !isValidEmail" class="field-error">Please enter a valid email.</p>
+              </div>
+              <div class="form-field w3-col s12 m6">
+                <label for="phone">Phone Number</label>
+                <input id="phone" type="tel" v-model="phone" @input="touched.phone = true" placeholder="+41 79 123 45 67" />
+                <p v-if="touched.phone && !isValidPhone" class="field-error">Format: +41 79 123 45 67 or 079 123 45 67</p>
+              </div>
+              <div class="form-field form-field-full w3-col s12">
+                <label for="address">Delivery Address</label>
+                <div class="address-row">
+                  <input id="address" type="text" v-model="address" @input="touched.address = true" placeholder="Click locate or type manually" />
+                  <button type="button" class="geo-btn" @click="getLocation" :disabled="geoLoading" aria-label="Locate my address">{{ geoLoading ? '…' : '📍' }}</button>
+                </div>
+                <p v-if="geoAccuracy" class="geo-detail">Accuracy: {{ geoAccuracy }}m | {{ geoLat }}, {{ geoLng }}</p>
+                <p v-if="geoError" class="field-error">{{ geoError }}</p>
+                <p v-if="touched.address && address.trim().length < 3" class="field-error">Please enter or locate your delivery address.</p>
               </div>
             </div>
-            <p class="cart-total">Total: {{ cartTotal.toFixed(2) }}</p>
-            <button class="clear-btn" @click="clearCart">Clear Cart</button>
-          </div>
-          <h3>Delivery Details</h3>
-          <form @submit.prevent="submitOrder">
-          <div class="form-grid w3-row-padding">
-            <div class="form-field w3-col s12 m6">
-              <label for="name">Your Name</label>
-              <input id="name" type="text" v-model="customerName" @input="touched.name = true" placeholder="Min. 2 characters" />
-              <p v-if="touched.name && customerName.trim().length < 2" class="field-error">Name must be at least 2 characters.</p>
-            </div>
-            <div class="form-field w3-col s12 m6">
-              <label for="email">Email</label>
-              <input id="email" type="email" v-model="email" @input="touched.email = true" placeholder="you@example.com" />
-              <p v-if="touched.email && !isValidEmail" class="field-error">Please enter a valid email.</p>
-            </div>
-            <div class="form-field w3-col s12 m6">
-              <label for="phone">Phone Number</label>
-              <input id="phone" type="tel" v-model="phone" @input="touched.phone = true" placeholder="+41 79 123 45 67" />
-              <p v-if="touched.phone && !isValidPhone" class="field-error">Format: +41 79 123 45 67 or 079 123 45 67</p>
-            </div>
-            <div class="form-field form-field-full w3-col s12">
-              <label for="address">Delivery Address</label>
-              <div class="address-row">
-                <input id="address" type="text" v-model="address" @input="touched.address = true" placeholder="Click locate or type manually" />
-                <button type="button" class="geo-btn" @click="getLocation" :disabled="geoLoading" aria-label="Locate my address">{{ geoLoading ? '…' : '📍' }}</button>
-              </div>
-              <p v-if="geoAccuracy" class="geo-detail">Accuracy: {{ geoAccuracy }}m | {{ geoLat }}, {{ geoLng }}</p>
-              <p v-if="geoError" class="field-error">{{ geoError }}</p>
-              <p v-if="touched.address && address.trim().length < 3" class="field-error">Please enter or locate your delivery address.</p>
-            </div>
-          </div>
-          <label class="save-details">
-            <input type="checkbox" v-model="saveDetails" />
-            Save my details for next time
-          </label>
-          <button class="order-btn" type="submit" :disabled="!canOrder">Place Order</button>
-          <p v-if="submitError" class="error-msg">{{ submitError }}</p>
-          </form>
-        </section>
+            <label class="save-details">
+              <input type="checkbox" v-model="saveDetails" />
+              Save my details for next time
+            </label>
+            <button class="order-btn" type="submit" :disabled="!canOrder">Place Order</button>
+            <p v-if="submitError" class="error-msg">{{ submitError }}</p>
+          </section>
+        </  form>
         <section id="output">
           <h2>Order Summary</h2>
           <div v-if="orderResult" class="order-summary">
