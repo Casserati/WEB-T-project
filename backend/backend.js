@@ -4,7 +4,7 @@ import { burgers, orders } from "./database.js";
 
 const router = express.Router();
 
-router.get("/", async function (req, res) {
+router.get("/burgers", async function (req, res) {
   res.type("application/json");
   try {
     const allBurgers = await burgers.find({}).toArray();
@@ -15,7 +15,7 @@ router.get("/", async function (req, res) {
   }
 });
 
-router.post("/", async function (req, res) {
+router.post("/orders", async function (req, res) {
   res.type("application/json");
   try {
     let data;
@@ -80,7 +80,7 @@ router.post("/", async function (req, res) {
         itemTotal: itemTotal,
       });
     }
-    const order = {
+    const dbOrder = {
       customerName: data.customerName.trim(),
       email: data.email.trim(),
       phone: data.phone.trim(),
@@ -91,14 +91,21 @@ router.post("/", async function (req, res) {
       totalPrice: Math.round(totalPrice * 100) / 100,
       createdAt: new Date(),
     };
-    const result = await orders.insertOne(order);
+    const result = await orders.insertOne(dbOrder);
+    const resOrder = {
+      customerName: dbOrder.customerName,
+      email: dbOrder.email,
+      phone: dbOrder.phone,
+      address: dbOrder.address,
+      items: orderItems,
+      totalPrice: dbOrder.totalPrice,
+    };
     res
       .status(201)
       .send(
         JSON.stringify({
-          success: true,
           orderId: result.insertedId.toString(),
-          order: order,
+          order: resOrder,
         }),
       );
   } catch (error) {
@@ -107,7 +114,7 @@ router.post("/", async function (req, res) {
   }
 });
 
-router.get("/last-order", async function (req, res) {
+router.get("/orders/last", async function (req, res) {
   res.type("application/json");
   try {
     const email = req.query.email;
@@ -123,9 +130,9 @@ router.get("/last-order", async function (req, res) {
       return res
         .status(404)
         .send(JSON.stringify({ error: "No previous orders found." }));
-    res.send(
-      JSON.stringify({ orderId: lastOrder._id.toString(), order: lastOrder }),
-    );
+    const resOrder = { customerName: lastOrder.customerName, email: lastOrder.email,
+      phone: lastOrder.phone, address: lastOrder.address, items: lastOrder.items, totalPrice: lastOrder.totalPrice };
+    res.send(JSON.stringify({ orderId: lastOrder._id.toString(), order: resOrder }));
   } catch (error) {
     console.error(error);
     res.status(500).send(JSON.stringify({ error: "Internal server error" }));

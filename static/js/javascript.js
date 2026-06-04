@@ -26,29 +26,46 @@ const app = createApp({
     function loadStorage() {
       try {
         const saved = localStorage.getItem("bp_cart");
-        if (saved) cart.value = JSON.parse(saved);
+        if (saved) {
+          cart.value = JSON.parse(saved);
+        }
         const lo = localStorage.getItem("bp_lastOrder");
-        if (lo) lastOrder.value = JSON.parse(lo);
+        if (lo) {
+          lastOrder.value = JSON.parse(lo);
+        }
         const sd = localStorage.getItem("bp_saveDetails");
         if (sd === "true") {
           saveDetails.value = true;
           const sa = localStorage.getItem("bp_address");
-          if (sa) address.value = sa;
+          if (sa) {
+            address.value = sa;
+          }
           const sn = localStorage.getItem("bp_name");
-          if (sn) customerName.value = sn;
+          if (sn) {
+            customerName.value = sn;
+          }
           const se = localStorage.getItem("bp_email");
-          if (se) email.value = se;
+          if (se) {
+            email.value = se;
+          }
           const sp = localStorage.getItem("bp_phone");
-          if (sp) phone.value = sp;
+          if (sp) {
+            phone.value = sp;
+          }
         }
       } catch (e) {
         console.error("Storage read error", e);
       }
     }
-    function saveCart() { localStorage.setItem("bp_cart", JSON.stringify(cart.value)); }
+    function saveCart() {
+      localStorage.setItem("bp_cart", JSON.stringify(cart.value));
+    }
     function saveAddress() {
-      if (saveDetails.value) localStorage.setItem("bp_address", address.value);
-      else localStorage.removeItem("bp_address");
+      if (saveDetails.value) {
+        localStorage.setItem("bp_address", address.value);
+      } else {
+        localStorage.removeItem("bp_address");
+      }
     }
     function saveContact() {
       localStorage.setItem("bp_saveDetails", saveDetails.value);
@@ -69,16 +86,28 @@ const app = createApp({
     const cartTotal = computed(() => cart.value.reduce((sum, item) => sum + item.itemTotal, 0));
     const canAddToCart = computed(() => selectedBurger.value && quantity.value >= 1 && quantity.value <= 20);
     const canOrder = computed(() => {
-      if (cart.value.length === 0) return false;
-      if (customerName.value.trim().length < 2) return false;
-      if (!isValidEmail.value) return false;
-      if (!isValidPhone.value) return false;
-      if (address.value.trim().length < 3) return false;
+      if (cart.value.length === 0) {
+        return false;
+      }
+      if (customerName.value.trim().length < 2) {
+        return false;
+      }
+      if (!isValidEmail.value) {
+        return false;
+      }
+      if (!isValidPhone.value) {
+        return false;
+      }
+      if (address.value.trim().length < 3) {
+        return false;
+      }
       return true;
     });
 
     function addToCart() {
-      if (!canAddToCart.value) return;
+      if (!canAddToCart.value) {
+        return;
+      }
       const burger = burgers.value.find((b) => b._id === selectedBurger.value);
       cart.value.push({
         id: Date.now(),
@@ -127,15 +156,21 @@ const app = createApp({
     }
     function onGeoError(err) {
       geoLoading.value = false;
-      if (err.code === 1) geoError.value = "Location access denied.";
-      else if (err.code === 2) geoError.value = "Position unavailable.";
-      else geoError.value = "Location request timed out.";
+      if (err.code === 1) {
+        geoError.value = "Location access denied.";
+      } else if (err.code === 2) {
+        geoError.value = "Position unavailable.";
+      } else {
+        geoError.value = "Location request timed out.";
+      }
     }
 
     async function fetchData() {
       try {
-        const response = await fetch("/backend", { method: "GET", signal: AbortSignal.timeout(5000) });
-        if (!response.ok) throw new Error("HTTP " + response.status);
+        const response = await fetch("/backend/burgers", { method: "GET", signal: AbortSignal.timeout(5000) });
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
         const result = await response.json();
         burgers.value = result.burgers.map((b) => ({ ...b, basePrice: Number(b.basePrice) || 0 }));
       } catch (err) {
@@ -147,12 +182,27 @@ const app = createApp({
     }
 
     async function submitOrder() {
-      touched.value = { name: true, email: true, phone: true, address: true };
-      if (!canOrder.value) return;
+      touched.value = { name: true, email: true, phone: true, address: true, quantity: true };
+      if (!canOrder.value) {
+        return;
+      }
       submitError.value = null;
-      const body = { cart: cart.value, customerName: customerName.value.trim(), email: email.value.trim(), phone: phone.value.trim(), address: address.value.trim(), lat: geoLat.value, lng: geoLng.value };
+      const body = {
+        cart: cart.value,
+        customerName: customerName.value.trim(),
+        email: email.value.trim(),
+        phone: phone.value.trim(),
+        address: address.value.trim(),
+        lat: geoLat.value,
+        lng: geoLng.value,
+      };
       try {
-        const response = await fetch("/backend", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) });
+        const response = await fetch("/backend/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(5000),
+        });
         const result = await response.json();
         if (!response.ok) {
           submitError.value = result.error || "Order failed.";
@@ -171,10 +221,15 @@ const app = createApp({
     }
 
     async function fetchLastOrder() {
-      if (!email.value) return;
+      if (!email.value) {
+        return;
+      }
       try {
-        const response = await fetch("/backend/last-order?email=" + encodeURIComponent(email.value.trim()), { method: "GET", signal: AbortSignal.timeout(5000) });
-        if (!response.ok) return;
+        const url = "/backend/orders/last?email=" + encodeURIComponent(email.value.trim());
+        const response = await fetch(url, { method: "GET", signal: AbortSignal.timeout(5000) });
+        if (!response.ok) {
+          return;
+        }
         const result = await response.json();
         lastOrder.value = result;
       } catch (e) {
@@ -190,7 +245,10 @@ const app = createApp({
       fetchLastOrder();
     });
 
-    return { burgers, loading, fetchError, submitError, orderResult, lastOrder, selectedBurger, customerName, email, phone, quantity, address, geoLat, geoLng, geoAccuracy, geoLoading, geoError, touched, cart, cartTotal, saveDetails, menuOpen, isValidEmail, isValidPhone, canAddToCart, canOrder, getLocation, addToCart, removeFromCart, clearCart, submitOrder };
+    return { burgers, loading, fetchError, submitError, orderResult, lastOrder, selectedBurger,
+      customerName, email, phone, quantity, address, geoLat, geoLng, geoAccuracy, geoLoading,
+      geoError, touched, cart, cartTotal, saveDetails, menuOpen, isValidEmail, isValidPhone,
+      canAddToCart, canOrder, getLocation, addToCart, removeFromCart, clearCart, submitOrder };
   },
 });
 app.mount("#app");

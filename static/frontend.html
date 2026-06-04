@@ -22,7 +22,7 @@
       <main>
         <section id="information" class="w3-row-padding">
           <div class="w3-col s12 l8">
-            <h2>Welcome to the Burger Palace!</h2>
+            <h1>Welcome to the Burger Palace!</h1>
             <p>Pick from our signature burgers, add them to your cart, fill in your delivery details, and place your order!</p>
           </div>
           <div class="w3-col s12 l4">
@@ -35,24 +35,30 @@
           <p v-else-if="fetchError" class="error-msg">{{ fetchError }}</p>
           <div v-else>
             <h3>Choose your Burger</h3>
-            <div class="card-grid">
-              <label v-for="b in burgers" :key="b._id" class="card" :class="{ selected: selectedBurger === b._id }">
-                <input type="radio" name="burger" :value="b._id" v-model="selectedBurger" />
-                <h4>{{ b.name }}</h4>
-                <p class="description">{{ b.description }}</p>
-                <p class="base-price">{{ b.basePrice.toFixed(2) }}</p>
-                <span v-if="b.popular" class="badge badge-popular">Popular</span>
-              </label>
+            <div class="card-grid w3-row-padding">
+              <div v-for="b in burgers" :key="b._id" class="w3-col s12 m6 l4">
+                <label class="card" :class="{ selected: selectedBurger === b._id }">
+                  <input type="radio" name="burger" :value="b._id" v-model="selectedBurger" />
+                  <h4>{{ b.name }}</h4>
+                  <p class="description">{{ b.description }}</p>
+                  <p class="base-price">{{ b.basePrice.toFixed(2) }}</p>
+                  <span v-if="b.popular" class="badge badge-popular">Popular</span>
+                </label>
+              </div>
             </div>
             <div class="form-field form-field-small">
               <label for="quantity">Quantity</label>
-              <input id="quantity" type="number" v-model.number="quantity" min="1" max="20" />
+              <input id="quantity" type="number" v-model.number="quantity" min="1" max="20" @input="touched.quantity = true" />
+              <p v-if="touched.quantity && (quantity < 1 || quantity > 20)" class="field-error">Quantity must be between 1 and 20.</p>
             </div>
             <button class="order-btn" @click="addToCart" :disabled="!canAddToCart">Add to Cart</button>
           </div>
         </section>
         <section id="cart">
-          <h2>Your Cart <span v-if="cart.length">({{ cart.length }})</span></h2>
+          <h2>
+            Your Cart
+            <span v-if="cart.length">({{ cart.length }})</span>
+          </h2>
           <p v-if="!cart.length" class="loading-msg">Your cart is empty.</p>
           <div v-else>
             <div v-for="item in cart" :key="item.id" class="cart-item">
@@ -68,23 +74,23 @@
             <button class="clear-btn" @click="clearCart">Clear Cart</button>
           </div>
           <h3>Delivery Details</h3>
-          <div class="form-grid">
-            <div class="form-field">
+          <div class="form-grid w3-row-padding">
+            <div class="form-field w3-col s12 m6">
               <label for="name">Your Name</label>
               <input id="name" type="text" v-model="customerName" @input="touched.name = true" placeholder="Min. 2 characters" />
               <p v-if="touched.name && customerName.trim().length < 2" class="field-error">Name must be at least 2 characters.</p>
             </div>
-            <div class="form-field">
+            <div class="form-field w3-col s12 m6">
               <label for="email">Email</label>
               <input id="email" type="email" v-model="email" @input="touched.email = true" placeholder="you@example.com" />
               <p v-if="touched.email && !isValidEmail" class="field-error">Please enter a valid email.</p>
             </div>
-            <div class="form-field">
+            <div class="form-field w3-col s12 m6">
               <label for="phone">Phone Number</label>
               <input id="phone" type="tel" v-model="phone" @input="touched.phone = true" placeholder="+41 79 123 45 67" />
               <p v-if="touched.phone && !isValidPhone" class="field-error">Format: +41 79 123 45 67 or 079 123 45 67</p>
             </div>
-            <div class="form-field form-field-full">
+            <div class="form-field form-field-full w3-col s12">
               <label for="address">Delivery Address</label>
               <div class="address-row">
                 <input id="address" type="text" v-model="address" @input="touched.address = true" placeholder="Click locate or type manually" />
@@ -105,20 +111,33 @@
         <section id="output">
           <h2>Order Summary</h2>
           <div v-if="orderResult" class="order-summary">
-            <p><strong>Order ID:</strong> {{ orderResult.orderId }}</p>
-            <p><strong>Customer:</strong> {{ orderResult.order.customerName }} ({{ orderResult.order.email }}, {{ orderResult.order.phone }})</p>
-            <p><strong>Delivery:</strong><br />{{ orderResult.order.address }}</p>
+            <p>
+              <strong>Order ID:</strong> {{ orderResult.orderId }}
+            </p>
+            <p>
+              <strong>Customer:</strong> {{ orderResult.order.customerName }} ({{ orderResult.order.email }}, {{ orderResult.order.phone }})
+            </p>
+            <p>
+              <strong>Delivery:</strong> {{ orderResult.order.address }}
+            </p>
             <div v-for="(item, i) in orderResult.order.items" :key="i" class="summary-item">
-              <p>{{ item.quantity }}x {{ item.burgerName }}</p>
+              <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
             </div>
             <p class="total-price">Total: {{ orderResult.order.totalPrice.toFixed(2) }}</p>
           </div>
           <div v-else-if="lastOrder" class="order-summary last-order">
             <h3>Your Last Order</h3>
-            <p><strong>Order ID:</strong> {{ lastOrder.orderId }}</p>
-            <p><strong>Delivery:</strong><br />{{ lastOrder.order.address }}</p>
+            <p>
+              <strong>Order ID:</strong> {{ lastOrder.orderId }}
+            </p>
+            <p>
+              <strong>Customer:</strong> {{ lastOrder.order.customerName }} ({{ lastOrder.order.email }}, {{ lastOrder.order.phone }})
+            </p>
+            <p>
+              <strong>Delivery:</strong> {{ lastOrder.order.address }}
+            </p>
             <div v-if="lastOrder.order.items" v-for="(item, i) in lastOrder.order.items" :key="i" class="summary-item">
-              <p>{{ item.quantity }}x {{ item.burgerName }}</p>
+              <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
             </div>
             <p class="total-price">Total: {{ lastOrder.order.totalPrice.toFixed(2) }}</p>
           </div>
@@ -139,14 +158,21 @@
             <h4>Follow Us</h4>
             <p>Stay connected on social media:</p>
             <div class="social-icons">
-              <a href="https://instagram.com" target="_blank"><img src="img/insta.svg" alt="Instagram" class="social-icon" /></a>
-              <a href="https://facebook.com" target="_blank"><img src="img/facebook.svg" alt="Facebook" class="social-icon" /></a>
-              <a href="https://github.com/Casserati/WEB-T-project" target="_blank"><img src="img/github.svg" alt="GitHub" class="social-icon" /></a>
-              <a href="https://tiktok.com" target="_blank"><img src="img/tiktok.svg" alt="TikTok" class="social-icon" /></a>
+              <a href="https://instagram.com" target="_blank">
+                <img src="img/insta.svg" alt="Instagram" class="social-icon" />
+              </a>
+              <a href="https://facebook.com" target="_blank">
+                <img src="img/facebook.svg" alt="Facebook" class="social-icon" />
+              </a>
+              <a href="https://github.com/Casserati/WEB-T-project" target="_blank">
+                <img src="img/github.svg" alt="GitHub" class="social-icon" />
+              </a>
+              <a href="https://tiktok.com" target="_blank">
+                <img src="img/tiktok.svg" alt="TikTok" class="social-icon" />
+              </a>
             </div>
           </div>
         </div>
-        <div class="w3-center w3-padding-16"><small>© 2026 Burger Palace. All rights reserved.</small></div>
       </footer>
     </div>
     <script src="js/javascript.js"></script>

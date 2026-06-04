@@ -8,6 +8,13 @@ header {
   background: #1E1E1E;
   padding: 12px 20px;
 }
+h1 {
+  color: #1E1E1E;
+  border-bottom: 3px solid #D4A017;
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 1.9rem;
+}
 nav {
   display: flex;
   gap: 20px;
@@ -31,20 +38,21 @@ h2 {
   margin-bottom: 16px;
 }
 .card-grid,
-.form-grid,
-.address-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
+.form-grid {
   margin-bottom: 20px;
 }
+.address-row {
+  display: flex;
+  gap: 14px;
+}
 .card {
+  display: block;
   background: #fff;
   border: 2px solid #eee;
   border-radius: 8px;
   padding: 14px 18px;
-  flex: 1 1 30%;
   cursor: pointer;
+  margin-bottom: 10px;
 }
 .card:hover,
 .card.selected {
@@ -60,7 +68,7 @@ h2 {
 .cart-item-price,
 .cart-total,
 .total-price {
-  color: #B8860B;
+  color: #8B6914;
   font-weight: 600;
 }
 .base-price::before,
@@ -69,7 +77,7 @@ h2 {
 .cart-total::before,
 .total-price::before {
   content: "CHF ";
-  color: #666;
+  color: #555;
   font-weight: 400;
 }
 .badge {
@@ -81,15 +89,6 @@ h2 {
   background: #D4A017;
   color: #1E1E1E;
 }
-.form-field {
-  flex: 1;
-}
-.form-field-small {
-  max-width: 120px;
-}
-.form-field-full {
-  flex-basis: 100%;
-}
 .form-field label,
 .save-details {
   display: block;
@@ -100,6 +99,10 @@ h2 {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.form-field-small {
+  max-width: 120px;
 }
 .order-btn,
 .geo-btn,
@@ -177,7 +180,7 @@ footer a {
   color: #F8F4EC;
   font-size: 1.5rem;
 }
-@media (max-width: 650px  ) {
+@media (max-width: 650px) {
   .hamburger {
     display: block;
   }
@@ -190,11 +193,5 @@ footer a {
   nav.menu-open a {
     display: block;
     padding: 8px 0;
-  }
-  .card {
-    flex-basis: 100%;
-  }
-  .form-field {
-    flex-basis: 100%;
   }
 }
