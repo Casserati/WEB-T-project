@@ -55,6 +55,10 @@ router.post("/orders", async function (req, res) {
     let totalPrice = 0;
     const orderItems = [];
     for (const ci of data.cart) {
+      if (!ObjectId.isValid(ci.burgerId))
+        return res
+          .status(400)
+          .send(JSON.stringify({ success: false, error: "Invalid burger ID." }));
       const burger = await burgers.findOne({ _id: new ObjectId(ci.burgerId) });
       if (!burger)
         return res

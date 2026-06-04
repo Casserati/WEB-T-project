@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,12 +11,12 @@
   <body>
     <div id="app">
       <header>
-        <nav :class="{ 'menu-open': menuOpen }">
-          <button class="hamburger" @click="menuOpen = !menuOpen" aria-label="Menu">☰</button>
-          <a href="#information">Information</a>
-          <a href="#order">Order</a>
-          <a href="#cart">Cart</a>
-          <a href="#output">Summary</a>
+        <nav class="w3-bar">
+          <button class="w3-bar-item w3-button w3-hide-large w3-hide-medium" @click="menuOpen = !menuOpen" aria-label="Menu">☰</button>
+          <a href="#information" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Information</a>
+          <a href="#order" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Order</a>
+          <a href="#cart" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Cart</a>
+          <a href="#output" class="w3-bar-item w3-button" :class="{ 'w3-hide-small': !menuOpen }">Summary</a>
         </nav>
       </header>
       <main>
@@ -37,13 +37,13 @@
             <h3>Choose your Burger</h3>
             <div class="card-grid w3-row-padding">
               <div v-for="b in burgers" :key="b._id" class="w3-col s12 m6 l4">
-                <label class="card" :class="{ selected: selectedBurger === b._id }">
-                  <input type="radio" name="burger" :value="b._id" v-model="selectedBurger" />
+                <div class="card" :class="{ selected: selectedBurger === b._id }" @click="selectedBurger = b._id">
+                  <input type="radio" name="burger" :value="b._id" v-model="selectedBurger" :aria-label="b.name" />
                   <h4>{{ b.name }}</h4>
                   <p class="description">{{ b.description }}</p>
                   <p class="base-price">{{ b.basePrice.toFixed(2) }}</p>
                   <span v-if="b.popular" class="badge badge-popular">Popular</span>
-                </label>
+                </div>
               </div>
             </div>
             <div class="form-field form-field-small">
@@ -67,13 +67,14 @@
               </div>
               <div class="cart-item-actions">
                 <span class="cart-item-price">{{ item.itemTotal.toFixed(2) }}</span>
-                <button class="remove-btn" @click="removeFromCart(item.id)">✕</button>
+                <button class="remove-btn" @click="removeFromCart(item.id)" aria-label="Remove item">✕</button>
               </div>
             </div>
             <p class="cart-total">Total: {{ cartTotal.toFixed(2) }}</p>
             <button class="clear-btn" @click="clearCart">Clear Cart</button>
           </div>
           <h3>Delivery Details</h3>
+          <form @submit.prevent="submitOrder">
           <div class="form-grid w3-row-padding">
             <div class="form-field w3-col s12 m6">
               <label for="name">Your Name</label>
@@ -94,7 +95,7 @@
               <label for="address">Delivery Address</label>
               <div class="address-row">
                 <input id="address" type="text" v-model="address" @input="touched.address = true" placeholder="Click locate or type manually" />
-                <button type="button" class="geo-btn" @click="getLocation" :disabled="geoLoading">{{ geoLoading ? '…' : '📍' }}</button>
+                <button type="button" class="geo-btn" @click="getLocation" :disabled="geoLoading" aria-label="Locate my address">{{ geoLoading ? '…' : '📍' }}</button>
               </div>
               <p v-if="geoAccuracy" class="geo-detail">Accuracy: {{ geoAccuracy }}m | {{ geoLat }}, {{ geoLng }}</p>
               <p v-if="geoError" class="field-error">{{ geoError }}</p>
@@ -105,41 +106,55 @@
             <input type="checkbox" v-model="saveDetails" />
             Save my details for next time
           </label>
-          <button class="order-btn" @click="submitOrder" :disabled="!canOrder">Place Order</button>
+          <button class="order-btn" type="submit" :disabled="!canOrder">Place Order</button>
           <p v-if="submitError" class="error-msg">{{ submitError }}</p>
+          </form>
         </section>
         <section id="output">
           <h2>Order Summary</h2>
           <div v-if="orderResult" class="order-summary">
-            <p>
-              <strong>Order ID:</strong> {{ orderResult.orderId }}
-            </p>
-            <p>
-              <strong>Customer:</strong> {{ orderResult.order.customerName }} ({{ orderResult.order.email }}, {{ orderResult.order.phone }})
-            </p>
-            <p>
-              <strong>Delivery:</strong> {{ orderResult.order.address }}
-            </p>
-            <div v-for="(item, i) in orderResult.order.items" :key="i" class="summary-item">
-              <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
+            <h3>Order Confirmed</h3>
+            <div class="w3-row-padding">
+              <div class="w3-col s12 m6">
+                <p>
+                  <strong>Order ID:</strong> {{ orderResult.orderId }}
+                </p>
+                <p>
+                  <strong>Customer:</strong> {{ orderResult.order.customerName }} ({{ orderResult.order.email }}, {{ orderResult.order.phone }})
+                </p>
+                <p>
+                  <strong>Delivery:</strong> {{ orderResult.order.address }}
+                </p>
+              </div>
+              <div class="w3-col s12 m6">
+                <div v-for="(item, i) in orderResult.order.items" :key="i" class="summary-item">
+                  <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
+                </div>
+                <p class="total-price">Total: {{ orderResult.order.totalPrice.toFixed(2) }}</p>
+              </div>
             </div>
-            <p class="total-price">Total: {{ orderResult.order.totalPrice.toFixed(2) }}</p>
           </div>
           <div v-else-if="lastOrder" class="order-summary last-order">
             <h3>Your Last Order</h3>
-            <p>
-              <strong>Order ID:</strong> {{ lastOrder.orderId }}
-            </p>
-            <p>
-              <strong>Customer:</strong> {{ lastOrder.order.customerName }} ({{ lastOrder.order.email }}, {{ lastOrder.order.phone }})
-            </p>
-            <p>
-              <strong>Delivery:</strong> {{ lastOrder.order.address }}
-            </p>
-            <div v-if="lastOrder.order.items" v-for="(item, i) in lastOrder.order.items" :key="i" class="summary-item">
-              <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
+            <div class="w3-row-padding">
+              <div class="w3-col s12 m6">
+                <p>
+                  <strong>Order ID:</strong> {{ lastOrder.orderId }}
+                </p>
+                <p>
+                  <strong>Customer:</strong> {{ lastOrder.order.customerName }} ({{ lastOrder.order.email }}, {{ lastOrder.order.phone }})
+                </p>
+                <p>
+                  <strong>Delivery:</strong> {{ lastOrder.order.address }}
+                </p>
+              </div>
+              <div class="w3-col s12 m6">
+                <div v-for="(item, i) in lastOrder.order.items" :key="i" class="summary-item">
+                  <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
+                </div>
+                <p class="total-price">Total: {{ lastOrder.order.totalPrice.toFixed(2) }}</p>
+              </div>
             </div>
-            <p class="total-price">Total: {{ lastOrder.order.totalPrice.toFixed(2) }}</p>
           </div>
           <p v-else class="loading-msg">No orders yet.</p>
         </section>
@@ -147,15 +162,15 @@
       <footer class="w3-container w3-padding-32">
         <div class="w3-row-padding">
           <div class="w3-col s12 m12 l4 col-pad">
-            <h4>Order Policy</h4>
+            <h3>Order Policy</h3>
             <p>All orders are final. Once confirmed, orders cannot be modified, canceled, or refunded.</p>
           </div>
           <div class="w3-col s12 m12 l4 col-pad">
-            <h4>Payment Policy</h4>
+            <h3>Payment Policy</h3>
             <p>Payment is due upon delivery. Our driver will collect the total amount in cash or by card at your door. Please have your payment ready when your order arrives to ensure a smooth and speedy handover.</p>
           </div>
           <div class="w3-col s12 m12 l4 col-pad">
-            <h4>Follow Us</h4>
+            <h3>Follow Us</h3>
             <p>Stay connected on social media:</p>
             <div class="social-icons">
               <a href="https://instagram.com" target="_blank">
