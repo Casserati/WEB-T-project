@@ -1,4 +1,4 @@
-// Run with: mongosh < seed_burgerpalace.js
+// Run with: mongosh < database_insert.js
 // To reset: use("burgerpalace"); db.dropDatabase();
 
 use("burgerpalace");
