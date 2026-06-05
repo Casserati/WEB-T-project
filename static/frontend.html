@@ -29,16 +29,24 @@
             <img src="img/burger-hero.png" alt="Delicious burger on a wooden board" class="hero-img" />
           </div>
         </section>
+        <!-- submit event from vue.js
+         prevent site reload so uses can see order confirmed text -->
         <form @submit.prevent="submitOrder">
           <section id="order">
             <h2>Menu</h2>
+            <!-- loading = ture before getting response to fetch database -->
             <p v-if="loading" class="loading-msg">Loading menu…</p>
+            <!-- fetchError null unless error occured fetching backend -->
             <p v-else-if="fetchError" class="error-msg">{{ fetchError }}</p>
             <div v-else>
               <h3>Choose your Burger</h3>
               <div class="card-grid w3-row-padding">
-                <div v-for="b in burgers" :key="b._id" class="w3-col s12 m6 l4">
+                <div v-for="b in burgers" class="w3-col s12 m6 l4">
+                  <!-- if selectedBurger matches burger id then add css class "selected" 
+                   click event on div changed var selectedBurger to current id of burger -->
                   <div class="card" :class="{ selected: selectedBurger === b._id }" @click="selectedBurger = b._id">
+                    <!-- :id makes it so b._id is actually read, if not with : then all burgers would have the same id attribute
+                     v-model sets selectedBurger to burger when selected via keyboard and to actually select radio button when pressed-->
                     <input type="radio" :id="'burger-' + b._id" name="burger" :value="b._id" v-model="selectedBurger" />
                     <label :for="'burger-' + b._id" class="burger-name">{{ b.name }}</label>
                     <p class="description">{{ b.description }}</p>
@@ -62,7 +70,7 @@
             </h2>
             <p v-if="!cart.length" class="loading-msg">Your cart is empty.</p>
             <div v-else>
-              <div v-for="item in cart" :key="item.id" class="cart-item">
+              <div v-for="item in cart" class="cart-item">
                 <div class="cart-item-info">
                   <strong>{{ item.quantity }}x {{ item.burgerName }}</strong>
                 </div>
@@ -109,7 +117,7 @@
             <button class="order-btn" type="submit" :disabled="!canOrder">Place Order</button>
             <p v-if="submitError" class="error-msg">{{ submitError }}</p>
           </section>
-        </  form>
+        </form>
         <section id="output">
           <h2>Order Summary</h2>
           <div v-if="orderResult" class="order-summary">
@@ -127,7 +135,7 @@
                 </p>
               </div>
               <div class="w3-col s12 m6">
-                <div v-for="(item, i) in orderResult.order.items" :key="i" class="summary-item">
+                <div v-for="item in orderResult.order.items" class="summary-item">
                   <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
                 </div>
                 <p class="total-price">Total: {{ orderResult.order.totalPrice.toFixed(2) }}</p>
@@ -149,7 +157,7 @@
                 </p>
               </div>
               <div class="w3-col s12 m6">
-                <div v-for="(item, i) in lastOrder.order.items" :key="i" class="summary-item">
+                <div v-for="item in lastOrder.order.items" class="summary-item">
                   <p>{{ item.quantity }}x {{ item.burgerName }} — CHF {{ item.itemTotal.toFixed(2) }}</p>
                 </div>
                 <p class="total-price">Total: {{ lastOrder.order.totalPrice.toFixed(2) }}</p>
@@ -161,6 +169,8 @@
       </main>
       <footer class="w3-container w3-padding-32">
         <div class="w3-row-padding">
+          <!-- w3 class = s -> phone, m -> tablet, l -> desktop, max is 12 other numbers mean x/12: e.g Order Policy
+           div will be 4/12 on dektop (s = 0px - 600px, m => 601px, l => 993px)-->
           <div class="w3-col s12 m12 l4 col-pad">
             <h3>Order Policy</h3>
             <p>All orders are final. Once confirmed, orders cannot be modified, canceled, or refunded.</p>
@@ -173,6 +183,7 @@
             <h3>Follow Us</h3>
             <p>Stay connected on social media:</p>
             <div class="social-icons">
+              <!-- target _blank means opening new tab with the link provided in href -->
               <a href="https://instagram.com" target="_blank">
                 <img src="img/insta.svg" alt="Instagram" class="social-icon" />
               </a>

@@ -55,10 +55,12 @@ router.post("/orders", async function (req, res) {
     let totalPrice = 0;
     const orderItems = [];
     for (const ci of data.cart) {
+      //check if burger-id is valid
       if (!ObjectId.isValid(ci.burgerId))
         return res
           .status(400)
           .send(JSON.stringify({ success: false, error: "Invalid burger ID." }));
+      //trying to find burger in database
       const burger = await burgers.findOne({ _id: new ObjectId(ci.burgerId) });
       if (!burger)
         return res
@@ -126,6 +128,7 @@ router.get("/orders/last", async function (req, res) {
       return res
         .status(400)
         .send(JSON.stringify({ error: "Email parameter required." }));
+    //database query with where clause
     const lastOrder = await orders.findOne(
       { email: email.trim() },
       { sort: { createdAt: -1 } },

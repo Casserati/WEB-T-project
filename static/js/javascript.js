@@ -1,6 +1,7 @@
 const { createApp, ref, computed, onMounted, watch } = Vue;
 const app = createApp({
   setup() {
+    //ref needed for reactvity of vue.js! when const updated -> ui will update
     const burgers = ref([]);
     const loading = ref(true);
     const fetchError = ref(null);
@@ -172,6 +173,7 @@ const app = createApp({
           throw new Error("HTTP " + response.status);
         }
         const result = await response.json();
+        // mapping burgers from backend 1:1 to object. override basePrice with parsed number (0 if number invalid)
         burgers.value = result.burgers.map((b) => ({ ...b, basePrice: Number(b.basePrice) || 0 }));
       } catch (err) {
         console.error("Fehler beim Laden:", err);
@@ -237,14 +239,17 @@ const app = createApp({
       }
     }
 
+    //when value changed (param one), call function (param 2)
     watch(address, saveAddress);
     watch(saveDetails, saveContact);
+    //when starting app do this:
     onMounted(() => {
       loadStorage();
       fetchData();
       fetchLastOrder();
     });
 
+    //return all everything which are refered in the frontend with {{ text }}
     return { burgers, loading, fetchError, submitError, orderResult, lastOrder, selectedBurger,
       customerName, email, phone, quantity, address, geoLat, geoLng, geoAccuracy, geoLoading,
       geoError, touched, cart, cartTotal, saveDetails, menuOpen, isValidEmail, isValidPhone,

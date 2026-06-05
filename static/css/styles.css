@@ -56,11 +56,14 @@ h2 {
   cursor: pointer;
   height: 100%;
 }
+/* hover = pseudo-class 
+tag must have class card and selected! => class="card selected" */
 .card:hover,
 .card.selected {
   border-color: #D4A017;
   box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.25);
 }
+/* nested css class all inputs withint a container which is class="card"*/
 .card input {
   position: absolute;
   opacity: 0;
@@ -71,6 +74,7 @@ h2 {
   font-weight: 700;
   margin: 6px 0;
 }
+/* this counts for all classes listed */
 .base-price,
 .upcharge,
 .cart-item-price,
@@ -79,6 +83,7 @@ h2 {
   color: #8B6914;
   font-weight: 600;
 }
+/* ::before means text insertet before text in tag */
 .base-price::before,
 .upcharge::before,
 .cart-item-price::before,
