@@ -1,13 +1,6 @@
 // Run with: mongosh < database_insert.js
 // To reset: use("burgerpalace"); db.dropDatabase();
-
 use("burgerpalace");
-
-db.createCollection("burgers");
-db.burgers.createIndex({ name: 1 }, { unique: true });
-db.createCollection("orders");
-db.orders.createIndex({ createdAt: -1 });
-db.orders.createIndex({ email: 1 });
 
 db.burgers.insertMany([
   { name: "Classic Burger",        description: "Beef patty with cheddar, lettuce, tomato, and pickles", basePrice: 12, popular: true },
